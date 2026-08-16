@@ -11,7 +11,7 @@ int main() {
         a{0},
         b{3},
         x{pm(a, b)},
-        epsilon{1e-15};
+        epsilon{std::numeric_limits<double>::epsilon()};
 
     auto handle_input = [&a, &b]() {
         std::cin >> a >> b;
