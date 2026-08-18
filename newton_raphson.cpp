@@ -26,7 +26,7 @@ int main() {
     if constexpr (user_input) {
         std::print("Insira o ponto inicial: ");
         std::cin >> x0;
-        while (df(x0) < 2.22e-16) {
+        while (df(x0) < std::numeric_limits<double>::epsilon()) {
             std::print(std::cerr, "Derivada no ponto {} é zero, escolha outro ponto: ", x0);
             std::cin >> x0;
         }
