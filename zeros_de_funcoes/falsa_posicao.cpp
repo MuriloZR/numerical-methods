@@ -5,8 +5,11 @@
 int main() {
     constexpr bool user_input{false};
 
-    constexpr auto f = [](double x) {return x*x - 2.0;};
-    constexpr auto zero_reta = [f](double a, double b) {return (a*f(b) - b*f(a))/(f(b) - f(a));};
+    constexpr auto f {[](double x) {return x*x - 2.0;}};
+    constexpr auto zero_reta {[f](double a, double b) {return (a*f(b) - b*f(a))/(f(b) - f(a));}};
+
+    constexpr auto erro_dominio {[](double a, double b) {return std::abs(b - a);}};
+    constexpr auto erro_imagem {[f](double x) {return std::abs(f(x));}};
 
     double
         a{0},
@@ -42,7 +45,7 @@ int main() {
         }
     }
 
-    while (b - a > epsilon && iter < MAX_ITER) {
+    while (erro_imagem(x) > epsilon&& erro_dominio(a, b) > epsilon && iter < MAX_ITER) {
         if (f(a)*f(x) < 0.0)    b = x;
         else                    a = x;
 

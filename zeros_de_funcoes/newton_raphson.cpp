@@ -7,16 +7,17 @@
 int main() {
     constexpr bool user_input{false};
 
-    constexpr auto f = []<typename T>(T x) {return  std::exp(x) - std::cos(x) - 2.0;};
+    constexpr auto f {[]<typename T>(T x) {return  std::exp(x) - std::cos(x) - 2.0;}};
 
     // constexpr auto df = [f](double x, double h = 1e-15) {return (f(x + h) - f(x))/h;}; // normal
     // constexpr auto df = [f](double x, double h = 1e-15) {return (f(x + h) - f(x - h))/(2.0*h);};
-    constexpr auto df = [f](double x, double h = std::numeric_limits<double>::epsilon()) {return f(std::complex<double>(x, h)).imag()/h;};
+    constexpr auto df {[f](double x, double h = std::numeric_limits<double>::epsilon()) {return f(std::complex<double>(x, h)).imag()/h;}};
 
-    // constexpr auto erro = [](double x0, double x1) {return std::abs(x1 - x0)/std::abs(x1);};
-    constexpr auto erro = [f](double x0, double x1) {return std::abs(f(x1) - f(x0));};
+    // constexpr auto erro_dominio = [](double x0, double x1) {return std::abs(x1 - x0)/std::abs(x1);};
+    constexpr auto erro_dominio {[](double x0, double x1) {return std::abs(x1 - x0);}};
+    constexpr auto erro_imagem {[f](double x1) {return std::abs(f(x1));}};
 
-    constexpr auto prox_ponto = [f, df](double x0) {return x0 - f(x0)/df(x0);};
+    constexpr auto prox_ponto {[f, df](double x0) {return x0 - f(x0)/df(x0);}};
 
     double
         x0{1},
@@ -46,7 +47,7 @@ int main() {
         }
     }
 
-    while (erro(x0, x1) > epsilon && iter < MAX_ITER) {
+    while (erro_imagem(x1) > epsilon && erro_dominio(x0, x1) > epsilon && iter < MAX_ITER) {
         x0 = x1;
         x1 = prox_ponto(x0);
         iter++;

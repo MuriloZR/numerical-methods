@@ -7,12 +7,13 @@
 int main() {
     constexpr bool user_input{true};
 
-    constexpr auto f = []<typename T>(T x) {return  std::exp(x) - std::cos(x) - 2.0;};
+    constexpr auto f {[]<typename T>(T x) {return  std::exp(x) - std::cos(x) - 2.0;}};
 
-    // constexpr auto erro = [](double x0, double x1) {return std::abs(x1 - x0)/std::abs(x1);};
-    constexpr auto erro = [f](double x0, double x1) {return std::abs(f(x1) - f(x0));};
+    // constexpr auto erro_dominio {[](double x0, double x1) {return std::abs(x1 - x0)/std::abs(x1);}};
+    constexpr auto erro_dominio {[](double x0, double x1) {return std::abs(x1 - x0);}};
+    constexpr auto erro_imagem {[f](double x1) {return std::abs(f(x1));}};
 
-    constexpr auto prox_ponto = [f](double x0, double x1) {return x1 - (f(x1)*(x1 - x0))/(f(x1) - f(x0));};
+    constexpr auto prox_ponto {[f](double x0, double x1) {return x1 - (f(x1)*(x1 - x0))/(f(x1) - f(x0));}};
 
     double
         x0{1},
@@ -44,7 +45,7 @@ int main() {
         }
     }
 
-    while (erro(x0, x1) > epsilon && iter < MAX_ITER) {
+    while (erro_imagem(x2) > epsilon && erro_dominio(x1, x2) > epsilon && iter < MAX_ITER) {
         x0 = x1;
         x1 = x2;
         x2 = prox_ponto(x0, x1);
