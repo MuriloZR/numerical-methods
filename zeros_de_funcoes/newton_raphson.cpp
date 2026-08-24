@@ -39,7 +39,7 @@ int main() {
         std::print("Insira o valor da tolerância: ");
         std::cin >> epsilon;
 
-        std::print("Insira o máximo de iterações que o método deve fazer");
+        std::print("Insira o máximo de iterações que o método deve fazer: ");
         std::cin >> MAX_ITER;
         while (MAX_ITER <= 0) {
             std::print(std::cerr, "Números menores ou iguais a 0, ou maiores que {} não são válidos. Insira um número de iterações válido: ", std::numeric_limits<int32_t>::max());
@@ -57,6 +57,7 @@ int main() {
         std::print("Valor da função: {}    x0: {}    x1: {}\n", f(x1), x0, x1);
     }
     else {
+        std::print("\nO método convergiu\n");
         std::print("Raiz da função: {}\nValor da função no ponto: {}\nn° iterações: {}\n", x1, f(x1), iter);
     }
 }
