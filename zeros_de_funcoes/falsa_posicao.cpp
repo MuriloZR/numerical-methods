@@ -1,11 +1,12 @@
 #include <iostream>
 #include <print>
 #include <algorithm>
+#include <cmath>
 
 int main() {
     constexpr bool user_input{false};
 
-    constexpr auto f {[](double x) {return x*x - 2.0;}};
+    constexpr auto f {[](double x) {return std::pow(x, 3) + x - 10.0;}};
     constexpr auto zero_reta {[f](double a, double b) {return (a*f(b) - b*f(a))/(f(b) - f(a));}};
 
     constexpr auto erro_dominio {[](double a, double b) {return std::abs(b - a);}};
@@ -45,16 +46,19 @@ int main() {
         }
     }
 
-    while (erro_imagem(x) > epsilon&& erro_dominio(a, b) > epsilon && iter < MAX_ITER) {
-        if (f(a)*f(x) < 0.0)    b = x;
+    while (erro_imagem(x) > epsilon && erro_dominio(a, b) > epsilon && iter < MAX_ITER) {
+        if (f(a)*f(x) <= 0.0)    b = x;
         else                    a = x;
 
         x = zero_reta(a, b);
         iter++;
     }
 
-    if (iter == MAX_ITER) {
-        std::print("Número máximo de iterações atingido. Últimos valores computados:\n");
+    if (std::isnan(f(x))) {
+        std::print("\nO método divergiu para NaN\n");
+    }
+    else if (iter >= MAX_ITER) {
+        std::print("\nNúmero máximo de iterações atingido. Últimos valores computados:\n");
         std::print("Valor da função: {}    a: {}    b: {}\n", f(x), a, b);
     }
     else {

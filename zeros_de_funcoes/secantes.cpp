@@ -5,9 +5,9 @@
 #include <cmath>
 
 int main() {
-    constexpr bool user_input{true};
+    constexpr bool user_input{false};
 
-    constexpr auto f {[]<typename T>(T x) {return  std::exp(x) - std::cos(x) - 2.0;}};
+    constexpr auto f {[](double x) {return  std::pow(x, 3) + x - 10.0;}};
 
     // constexpr auto erro_dominio {[](double x0, double x1) {return std::abs(x1 - x0)/std::abs(x1);}};
     constexpr auto erro_dominio {[](double x0, double x1) {return std::abs(x1 - x0);}};
@@ -18,7 +18,7 @@ int main() {
     double
         x0{1},
         x1{2},
-        x2{},
+        x2{prox_ponto(x0, x1)},
         epsilon{std::numeric_limits<double>::epsilon()};
 
     int32_t
@@ -52,12 +52,15 @@ int main() {
         iter++;
     }
 
-    if (iter == MAX_ITER) {
-        std::print("Número máximo de iterações atingido. Últimos valores computados:\n");
-        std::print("Valor da função: {}    x0: {}    x1: {}    x2: {}\n", f(x2), x0, x1, x2);
+    if (std::isnan(f(x1))) {
+        std::print("\nO método divergiu para NaN\n");
+    }
+    else if (iter >= MAX_ITER) {
+        std::print("\nNúmero máximo de iterações atingido. Últimos valores computados:\n");
+        std::print("Valor da função: {}    x0: {}    x1: {}\n", f(x2), x1, x2);
     }
     else {
         std::print("\nO método convergiu\n");
-        std::print("Raiz da função: {}\nValor da função no ponto: {}\nn° iterações: {}\n", x1, f(x1), iter);
+        std::print("Raiz da função: {}\nValor da função no ponto: {}\nn° iterações: {}\n", x2, f(x2), iter);
     }
 }

@@ -1,0 +1,2 @@
+clang++ -std=c++23 bissessao.cpp -o bissessao; clang++ -std=c++23 falsa_posicao.cpp -o falsa_posicao; clang++ -std=c++23 newton_raphson.cpp -o newton_raphson; clang++ -std=c++23 secantes.cpp -o secantes;
+./bissessao; ./falsa_posicao; ./newton_raphson; ./secantes

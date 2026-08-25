@@ -7,7 +7,7 @@
 int main() {
     constexpr bool user_input{false};
 
-    constexpr auto f {[]<typename T>(T x) {return  std::exp(x) - std::cos(x) - 2.0;}};
+    constexpr auto f {[]<typename T>(T x) {return  std::pow(x, 3) + x - 10.0;}};
 
     // constexpr auto df = [f](double x, double h = 1e-15) {return (f(x + h) - f(x))/h;}; // normal
     // constexpr auto df = [f](double x, double h = 1e-15) {return (f(x + h) - f(x - h))/(2.0*h);};
@@ -31,7 +31,7 @@ int main() {
     if constexpr (user_input) {
         std::print("Insira o ponto inicial: ");
         std::cin >> x0;
-        while (df(x0) < std::numeric_limits<double>::epsilon()) {
+        while (std::abs(df(x0)) < std::numeric_limits<double>::epsilon()) {
             std::print(std::cerr, "Derivada no ponto {} é zero, escolha outro ponto: ", x0);
             std::cin >> x0;
         }
@@ -53,8 +53,11 @@ int main() {
         iter++;
     }
 
-    if (iter == MAX_ITER) {
-        std::print("Número máximo de iterações atingido. Últimos valores computados:\n");
+    if (std::isnan(f(x1))) {
+        std::print("\nO método divergiu para NaN\n");
+    }
+    else if (iter >= MAX_ITER) {
+        std::print("\nNúmero máximo de iterações atingido. Últimos valores computados:\n");
         std::print("Valor da função: {}    x0: {}    x1: {}\n", f(x1), x0, x1);
     }
     else {
