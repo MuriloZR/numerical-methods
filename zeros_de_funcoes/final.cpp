@@ -22,34 +22,32 @@ struct Result {
 template <typename Func>
 requires std::invocable<Func, double>
 auto bissessao(Func&& f, double a, double b,
-               double tol_abs = 1e-15,
-               double tol_rel = 1e-15,
-               int32_t max_iter = 1000) -> Result
+                double epsilon = std::numeric_limits<double>::epsilon(),
+                int32_t max_iter = 1000) -> Result
 {
     auto pm {[&a, &b](){
         return a+(b-a)/2.0;}
     };
 
-    double fa = f(a);
-    double fb = f(b);
+    double
+        fa {f(a)},
+        fb {f(b)},
+        tol_abs {epsilon},
+        tol_rel {epsilon};
 
-    if (fa * fb > 0.0) {
-        return { 0.0, 0.0, 0, Status::InvalidInterval };
-    }
+    if (fa * fb > 0.0) return { 0.0, 0.0, 0, Status::InvalidInterval };
 
-    double x = pm();
-    double fx = f(x);
+    double x {pm()};
+    double fx {f(x)};
 
-    for (int32_t iter = 0; iter < max_iter; ++iter) {
-        double current_tol = tol_abs + tol_rel * std::max(std::abs(a), std::abs(b));
+    for (int32_t iter {0}; iter < max_iter; iter++) {
+        double current_tol {tol_abs + tol_rel * std::max(std::abs(a), std::abs(b))};
 
         if (std::abs(fx) <= tol_abs || std::abs(b - a) < current_tol) {
             return { x, fx, iter, Status::Success };
         }
 
-        if (std::isnan(fx) || std::isinf(fx)) {
-            return { x, fx, iter, Status::DivergedToNaN };
-        }
+        if (std::isnan(fx) || std::isinf(fx)) return { x, fx, iter, Status::DivergedToNaN };
 
         if (fa * fx <= 0.0) {
             b = x; fb = fx;
@@ -60,7 +58,6 @@ auto bissessao(Func&& f, double a, double b,
 
         x = pm();
         fx = f(x);
-        iter++;
     }
 
     return { x, fx, max_iter, Status::MaxIterationsReached };
@@ -69,31 +66,35 @@ auto bissessao(Func&& f, double a, double b,
 template <typename Func>
 requires std::invocable<Func, double>
 auto falsa_posicao(Func&& f, double a, double b,
-               double tol_abs = 1e-15,
-               double tol_rel = 1e-15,
-               int32_t max_iter = 1000) -> Result
+                double epsilon = std::numeric_limits<double>::epsilon(),
+                int32_t max_iter = 1000) -> Result
 {
-    double fa {f(a)};
-    double fb {f(b)};
+    double
+        fa {f(a)},
+        fb {f(b)},
+        x {},
+        fx {},
+        tol_abs = epsilon,
+        tol_rel = epsilon;
+
     auto zero_reta {[&a, &fa, &b, &fb](){return a - fa * (b-a)/(fb-fa);}};
 
-    if (fa * fb > 0.0) {
-        return { 0.0, 0.0, 0, Status::InvalidInterval };
-    }
+    x = zero_reta();
+    fx = f(x);
 
-    double x{zero_reta()};
-    double fx = f(x);
+    if (fa * fb > 0.0) return { 0.0, 0.0, 0, Status::InvalidInterval };
 
     for (int32_t iter = 0; iter < max_iter; ++iter) {
-        double current_tol = tol_abs + tol_rel * std::max(std::abs(a), std::abs(b));
+        if (std::abs(fb-fa) < std::numeric_limits<double>::epsilon()) {
+            return { a, fa, iter, Status::DivergedToNaN };
+        }
 
+        double current_tol = tol_abs + tol_rel * std::max(std::abs(a), std::abs(b));
         if (std::abs(fx) <= tol_abs || std::abs(b - a) < current_tol) {
             return { x, fx, iter, Status::Success };
         }
 
-        if (std::isnan(fx) || std::isinf(fx)) {
-            return { x, fx, iter, Status::DivergedToNaN };
-        }
+        if (std::isnan(fx) || std::isinf(fx)) return { x, fx, iter, Status::DivergedToNaN };
 
         if (fa * fx <= 0.0) {
             b = x; fb = fx;
@@ -101,10 +102,8 @@ auto falsa_posicao(Func&& f, double a, double b,
         else {
             a = x; fa = fx;
         }
-
         x = zero_reta();
         fx = f(x);
-        iter++;
     }
 
     return { x, fx, max_iter, Status::MaxIterationsReached };
@@ -113,83 +112,110 @@ auto falsa_posicao(Func&& f, double a, double b,
 template <typename Func>
 requires std::invocable<Func, std::complex<double>>
 auto newton_raphson(Func&& f, double x0,
-               double tol_abs = 1e-15,
-               double tol_rel = 1e-15,
-               int32_t max_iter = 100) -> Result
+                double epsilon = std::numeric_limits<double>::epsilon(),
+                int32_t max_iter = 100) -> Result
 {
-    double x = x0;
-    constexpr double h = 1e-100; // h extremamente pequeno funciona com passo complexo!
+    constexpr double h = 1e-100;
+    double
+        tol_abs {epsilon},
+        tol_rel {epsilon};
 
-    for (int32_t iter = 0; iter < max_iter; ++iter) {
-        std::complex<double> z = f(std::complex<double>(x, h));
+    for (int32_t iter {0}; iter < max_iter; ++iter) {
+        std::complex<double> z = f(std::complex<double>(x0, h));
         double fx = z.real();
         double dfx = z.imag() / h;
 
         if (std::abs(fx) <= tol_abs) {
-            return { x, fx, iter, Status::Success };
+            return { x0, fx, iter, Status::Success };
         }
 
         if (std::abs(dfx) < std::numeric_limits<double>::epsilon()) {
-            return { x, fx, iter, Status::DivergedToNaN };
+            return { x0, fx, iter, Status::DivergedToNaN };
         }
 
         double delta = fx / dfx;
-        double x_next = x - delta;
+        double x1 = x0 - delta;
+        double current_tol = tol_abs + tol_rel * std::abs(x0);
 
-        double current_tol = tol_abs + tol_rel * std::abs(x);
-        if (std::abs(x_next - x) < current_tol) {
-            return { x_next, fx, iter, Status::Success };
+        if (std::abs(delta) < current_tol) {
+           return { x1, f(std::complex<double>(x1, 0.0)).real(), iter + 1, Status::Success };
         }
 
-        x = x_next;
-        if (std::isnan(x) || std::isinf(x)) return { x, fx, iter, Status::DivergedToNaN };
+        x0 = x1;
+        if (std::isnan(x0) || std::isinf(x0)) return { x0, fx, iter, Status::DivergedToNaN };
     }
 
-    return { x, f(std::complex<double>(x, 0)).real(), max_iter, Status::MaxIterationsReached };
+    return { x0, f(std::complex<double>(x0, 0)).real(), max_iter, Status::MaxIterationsReached };
 }
 
 template <typename Func>
 requires std::invocable<Func, double>
 auto secantes(Func&& f, double x0, double x1,
-               double tol_abs = 1e-15,
-               double tol_rel = 1e-15,
-               int32_t max_iter = 1000) -> Result
+                double epsilon = std::numeric_limits<double>::epsilon(),
+                int32_t max_iter = 1000) -> Result
 {
-    auto prox_ponto {[&f, &x0, &x1](){
-        return x1 - (f(x1)*(x1 - x0))/(f(x1) - f(x0));}
-    };
+    double
+        tol_abs {epsilon},
+        tol_rel {epsilon},
+        fx0 {f(x0)},
+        fx1 {f(x1)};
 
-    double x2 {prox_ponto()};
+    for (int32_t iter = 0; iter < max_iter; iter++) {
+        if (std::abs(fx1) <= tol_abs) return { x1, fx1, iter, Status::Success };
 
-    for (int32_t iter = 0; iter < max_iter; ++iter) {
-        double current_tol = tol_abs + tol_rel * std::max(std::abs(x0), std::abs(x1));
-
-        if (std::abs(f(x1)) <= tol_abs || std::abs(x1 - x0) < current_tol) {
-            return { x1, f(x1), iter, Status::Success };
+        if (std::abs(fx1 - fx0) < std::numeric_limits<double>::epsilon()) {
+            return { x1, fx1, iter, Status::DivergedToNaN };
         }
 
-        if (std::isnan(x2) || std::isinf(x2)) {
-            return { x1, f(x1), iter, Status::DivergedToNaN };
-        }
+        double step = fx1 * (x1 - x0) / (fx1 - fx0);
+        double x2 = x1 - step;
+        double current_tol = tol_abs + tol_rel * std::abs(x1);
 
-        x0 = x1;
-        x1 = x2;
-        x2 = prox_ponto();
-        iter++;
+        if (std::abs(step) < current_tol) return { x2, f(x2), iter+1, Status::Success };
+
+        x0 = x1; fx0 = fx1;
+        x1 = x2; fx1 = f(x2);
+
+        if (std::isnan(x1) || std::isinf(x1)) return { x1, fx1, iter, Status::DivergedToNaN };
     }
 
-    return { x2, f(x2), max_iter, Status::MaxIterationsReached };
+    return { x1, f(x1), max_iter, Status::MaxIterationsReached };
 }
 
 int main() {
     auto f = []<typename T>(T x) { return std::pow(x, 3) + x - 10.0; };
-    double x0 {0.0}, x1{3.0};
+    constexpr bool user_input{true};
+
+    double
+        x0 {0.0},
+        x1{3.0},
+        epsilon{std::numeric_limits<double>::epsilon()};
+
+    int32_t MAX_ITER{1'000'000};
+
+    if constexpr (user_input) {
+        std::print("Insira dois pontos: ");
+        std::cin >> x0 >> x1;
+        while (std::abs(x1 - x0) < epsilon) {
+            std::print(std::cerr, "Os pontos {} e {} são iguais, escolha outros pontos: ", x0, x1);
+            std::cin >> x0 >> x1;
+        }
+
+        std::print("Insira o valor da tolerância: ");
+        std::cin >> epsilon;
+
+        std::print("Insira o máximo de iterações que o método deve fazer: ");
+        std::cin >> MAX_ITER;
+        while (MAX_ITER <= 0) {
+            std::print(std::cerr, "Números menores ou iguais a 0, ou maiores que {} não são válidos. Insira um número de iterações válido: ", std::numeric_limits<int32_t>::max());
+        }
+    }
 
     auto results = {
-        bissessao(f, x0, x1),
-        falsa_posicao(f, x0, x1),
-        newton_raphson(f, x0),
-        secantes(f, x0, x1)
+        bissessao(f, x0, x1, epsilon, MAX_ITER),
+        falsa_posicao(f, x0, x1, epsilon, MAX_ITER),
+        newton_raphson(f, x0, epsilon, MAX_ITER),
+        secantes(f, x0, x1, epsilon, MAX_ITER)
     };
 
     for (auto result : results) {
