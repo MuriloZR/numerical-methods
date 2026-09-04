@@ -6,7 +6,7 @@ int main() {
     constexpr bool user_input{false};
 
     constexpr auto f {[](double x) {return std::pow(x, 3) + x - 10.0;}};
-    constexpr auto pm {[](double a, double b) {return (a+b)/2.0;}};
+    constexpr auto pm {[](double a, double b) {return a+(b-a)/2.0;}};
 
     constexpr auto erro_dominio {[](double a, double b) {return std::abs(b - a);}};
     constexpr auto erro_imagem {[f](double x) {return std::abs(f(x));}};
