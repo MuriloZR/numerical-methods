@@ -17,11 +17,12 @@ struct Result {
     double f_root;
     int32_t iterations;
     Status status;
+    std::string metodo;
 };
 
 template <typename Func>
 requires std::invocable<Func, double>
-auto bissessao(Func&& f, double a, double b,
+auto bissecao(Func&& f, double a, double b,
                 double epsilon = std::numeric_limits<double>::epsilon(),
                 int32_t max_iter = 1000) -> Result
 {
@@ -35,7 +36,7 @@ auto bissessao(Func&& f, double a, double b,
         tol_abs {epsilon},
         tol_rel {epsilon};
 
-    if (fa * fb > 0.0) return { 0.0, 0.0, 0, Status::InvalidInterval };
+    if (fa * fb > 0.0) return { 0.0, 0.0, 0, Status::InvalidInterval, "Bissecao" };
 
     double x {pm()};
     double fx {f(x)};
@@ -44,10 +45,10 @@ auto bissessao(Func&& f, double a, double b,
         double current_tol {tol_abs + tol_rel * std::max(std::abs(a), std::abs(b))};
 
         if (std::abs(fx) <= tol_abs || std::abs(b - a) < current_tol) {
-            return { x, fx, iter, Status::Success };
+            return { x, fx, iter, Status::Success, "Bissecao" };
         }
 
-        if (std::isnan(fx) || std::isinf(fx)) return { x, fx, iter, Status::DivergedToNaN };
+        if (std::isnan(fx) || std::isinf(fx)) return { x, fx, iter, Status::DivergedToNaN, "Bissessao" };
 
         if (fa * fx <= 0.0) {
             b = x; fb = fx;
@@ -60,7 +61,7 @@ auto bissessao(Func&& f, double a, double b,
         fx = f(x);
     }
 
-    return { x, fx, max_iter, Status::MaxIterationsReached };
+    return { x, fx, max_iter, Status::MaxIterationsReached, "Bissecao" };
 }
 
 template <typename Func>
@@ -82,19 +83,19 @@ auto falsa_posicao(Func&& f, double a, double b,
     x = zero_reta();
     fx = f(x);
 
-    if (fa * fb > 0.0) return { 0.0, 0.0, 0, Status::InvalidInterval };
+    if (fa * fb > 0.0) return { 0.0, 0.0, 0, Status::InvalidInterval, "Falsa Posicao" };
 
     for (int32_t iter = 0; iter < max_iter; ++iter) {
         if (std::abs(fb-fa) < std::numeric_limits<double>::epsilon()) {
-            return { a, fa, iter, Status::DivergedToNaN };
+            return { a, fa, iter, Status::DivergedToNaN, "Falsa Posicao" };
         }
 
         double current_tol = tol_abs + tol_rel * std::max(std::abs(a), std::abs(b));
         if (std::abs(fx) <= tol_abs || std::abs(b - a) < current_tol) {
-            return { x, fx, iter, Status::Success };
+            return { x, fx, iter, Status::Success, "Falsa Posicao" };
         }
 
-        if (std::isnan(fx) || std::isinf(fx)) return { x, fx, iter, Status::DivergedToNaN };
+        if (std::isnan(fx) || std::isinf(fx)) return { x, fx, iter, Status::DivergedToNaN, "Falsa Posicao" };
 
         if (fa * fx <= 0.0) {
             b = x; fb = fx;
@@ -106,7 +107,7 @@ auto falsa_posicao(Func&& f, double a, double b,
         fx = f(x);
     }
 
-    return { x, fx, max_iter, Status::MaxIterationsReached };
+    return { x, fx, max_iter, Status::MaxIterationsReached, "Falsa Posicao" };
 }
 
 template <typename Func>
@@ -126,11 +127,11 @@ auto newton_raphson(Func&& f, double x0,
         double dfx = z.imag() / h;
 
         if (std::abs(fx) <= tol_abs) {
-            return { x0, fx, iter, Status::Success };
+            return { x0, fx, iter, Status::Success, "Newton Raphson" };
         }
 
         if (std::abs(dfx) < std::numeric_limits<double>::epsilon()) {
-            return { x0, fx, iter, Status::DivergedToNaN };
+            return { x0, fx, iter, Status::DivergedToNaN, "Newton Raphson" };
         }
 
         double delta = fx / dfx;
@@ -138,14 +139,14 @@ auto newton_raphson(Func&& f, double x0,
         double current_tol = tol_abs + tol_rel * std::abs(x0);
 
         if (std::abs(delta) < current_tol) {
-           return { x1, f(std::complex<double>(x1, 0.0)).real(), iter + 1, Status::Success };
+           return { x1, f(std::complex<double>(x1, 0.0)).real(), iter + 1, Status::Success, "Newton Raphson" };
         }
 
         x0 = x1;
-        if (std::isnan(x0) || std::isinf(x0)) return { x0, fx, iter, Status::DivergedToNaN };
+        if (std::isnan(x0) || std::isinf(x0)) return { x0, fx, iter, Status::DivergedToNaN, "Newton Raphson" };
     }
 
-    return { x0, f(std::complex<double>(x0, 0)).real(), max_iter, Status::MaxIterationsReached };
+    return { x0, f(std::complex<double>(x0, 0)).real(), max_iter, Status::MaxIterationsReached, "Newton Raphson" };
 }
 
 template <typename Func>
@@ -161,25 +162,25 @@ auto secantes(Func&& f, double x0, double x1,
         fx1 {f(x1)};
 
     for (int32_t iter = 0; iter < max_iter; iter++) {
-        if (std::abs(fx1) <= tol_abs) return { x1, fx1, iter, Status::Success };
+        if (std::abs(fx1) <= tol_abs) return { x1, fx1, iter, Status::Success, "Secantes" };
 
         if (std::abs(fx1 - fx0) < std::numeric_limits<double>::epsilon()) {
-            return { x1, fx1, iter, Status::DivergedToNaN };
+            return { x1, fx1, iter, Status::DivergedToNaN, "Secantes" };
         }
 
         double step = fx1 * (x1 - x0) / (fx1 - fx0);
         double x2 = x1 - step;
         double current_tol = tol_abs + tol_rel * std::abs(x1);
 
-        if (std::abs(step) < current_tol) return { x2, f(x2), iter+1, Status::Success };
+        if (std::abs(step) < current_tol) return { x2, f(x2), iter+1, Status::Success, "Secantes" };
 
         x0 = x1; fx0 = fx1;
         x1 = x2; fx1 = f(x2);
 
-        if (std::isnan(x1) || std::isinf(x1)) return { x1, fx1, iter, Status::DivergedToNaN };
+        if (std::isnan(x1) || std::isinf(x1)) return { x1, fx1, iter, Status::DivergedToNaN, "Secantes" };
     }
 
-    return { x1, f(x1), max_iter, Status::MaxIterationsReached };
+    return { x1, f(x1), max_iter, Status::MaxIterationsReached, "Secantes" };
 }
 
 int main() {
@@ -212,13 +213,18 @@ int main() {
     }
 
     auto results = {
-        bissessao(f, x0, x1, epsilon, MAX_ITER),
+        bissecao(f, x0, x1, epsilon, MAX_ITER),
         falsa_posicao(f, x0, x1, epsilon, MAX_ITER),
         newton_raphson(f, x0, epsilon, MAX_ITER),
         secantes(f, x0, x1, epsilon, MAX_ITER)
     };
 
+    std::print("\n//////////////////////////////\n");
+    std::print(  "/         Resultados         /\n");
+    std::print(  "//////////////////////////////\n\n");
+
     for (auto result : results) {
+        std::print("Método: {}\n", result.metodo);
         switch (result.status) {
             case Status::Success:
                 std::print("O método convergiu!\n");
@@ -234,7 +240,7 @@ int main() {
                 break;
             case Status::MaxIterationsReached:
                 std::print("Número máximo de iterações atingido. Últimos valores computados:\n");
-                std::print("Valor da função: {}    x: {}\n", result.f_root, result.root);
+                std::print("Raiz: {}    f(raiz): {}\n", result.root, result.f_root);
                 break;
         }
         std::cout << std::endl;
