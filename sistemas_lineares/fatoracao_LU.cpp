@@ -39,6 +39,7 @@ struct sistema {
 };
 
 template<typename T>
+[[nodiscard("Altera U in-place e retorna L")]]
 std::vector<std::vector<T>> eliminacao_gauss(std::vector<std::vector<T>> &U, int n) {
     std::vector<std::vector<T>> L(n, std::vector<T>(n, 0));
 
@@ -82,7 +83,7 @@ std::vector<T> find_y(std::vector<std::vector<T>> L, std::vector<T> B, int n) {
 }
 
 template<typename T>
-[[nodiscard("Solução do sistema linear")]]
+[[nodiscard("Solução de Ux = y")]]
 std::vector<T> find_x(std::vector<std::vector<T>> U, std::vector<T> y, int n) {
     std::vector<double> x(n);
     x[x.size()-1] = y[n-1]/U[n-1][n-1];
@@ -97,26 +98,12 @@ std::vector<T> find_x(std::vector<std::vector<T>> U, std::vector<T> y, int n) {
 }
 
 template<typename T>
-void print_matriz(std::vector<std::vector<T>> m, int n) {
-    for (int i{}; i < n; i++) {
-        for (int j{}; j < n; j++) {
-            std::print("{} ", m.at(i).at(j));
-        }
-        std::print("\n");
-    }
-}
-
-template<typename T>
-std::vector<std::vector<T>> mult_matriz(std::vector<std::vector<T>> A, std::vector<std::vector<T>> B) {
-    std::vector<std::vector<T>> C(A.size(), std::vector<T>(A.size(), 0));
-    for (int i = 0; i < A.size(); i++) {
-        for (int j = 0; j < A.size(); j++) {
-            for (int k = 0; k < A.size(); k++) {
-                C[i][j] += A[i][k] * B[k][j];
-            }
-        }
-    }
-    return C;
+[[nodiscard("Solução do sistema linear")]]
+std::vector<T> fatoracao_LU(const sistema<T> &S) {
+    sistema<T> A {S};
+    auto L = eliminacao_gauss(A.a, A.n);
+    auto y = find_y(L, A.b, A.n);
+    return find_x(A.a, y, A.n);
 }
 
 template<typename T>
@@ -140,8 +127,7 @@ int main() {
         std::cin >> A.b[i];
     }
 
-    auto L = eliminacao_gauss(A.a, A.n);
-    auto y = find_y(L, A.b, A.n);
-    auto x = find_x(A.a, y, A.n);
+    auto x = fatoracao_LU(A);
+    A.print_sistema();
     print_solucao(x);
 }
