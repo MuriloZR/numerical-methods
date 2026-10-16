@@ -1,2 +1,4 @@
 .clangd
 *.out
+*.data*
+matriz*
