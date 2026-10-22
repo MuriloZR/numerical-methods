@@ -81,10 +81,7 @@ void mult_CX_add_g(const std::vector<std::vector<T>> &C, std::vector<T> &X, cons
         for (int j {}; j < X.size(); j++) {
             res[i] += C[i][j] * X[j];
         }
-        res[i] += g[i];
-        // std::print("X[{}]: {} res[{}]: {}\n", i, X[i], i, res[i]);
-        X[i] = res[i];
-        // std::print("X[{}]: {} res[{}]: {}\n", i, X[i], i, res[i]);
+        X[i] = res[i] + g[i];
     }
 }
 
