@@ -46,7 +46,7 @@ auto build_CG(const sistema<T> &s) {
     std::vector<T> g(s.n);
 
     for (int i = 0; i < s.n; i++) {
-        for (int j = 1; j < s.n; j++) {
+        for (int j = 0; j < s.n; j++) {
             C[i][j] = ( i == j ? 0 : -s.a[i][j]/s.a[i][i] );
         }
         g[i] = s.b[i]/s.a[i][i];
@@ -113,22 +113,24 @@ template<typename T>
 [[nodiscard]]
 auto norma3(const std::vector<T> &X1, const std::vector<T> &X0) {
     T res {};
-    for (int i {}; i < X1.size(); i++) res = (std::abs(X1[i] - X0[i]) > res ? std::abs(X1[i] - X0[i]) : res);
+    for (int i {}; i < X1.size(); i++) res = std::max(std::abs(X1[i] - X0[i]), res);
     return res;
 }
 
 template<typename T>
 [[nodiscard]]
-auto solve_CG(const std::vector<std::vector<T>> &C, std::vector<T> &X, const std::vector<T> &g) {
-    T eps{ std::numeric_limits<T>::epsilon() };
+auto solve_CG(const std::vector<std::vector<T>> &C, std::vector<T> &X, const std::vector<T> &g, T eps = std::numeric_limits<T>::epsilon()) {
     int32_t iter{}, MAX_ITER{1'000'000};
     std::vector<T> X1(X.size());
-    do {
+    while (iter < MAX_ITER) {
         X1 = mult_CX(C, X);
-        sum_g(X, g);
+        sum_g(X1, g);
+
+        if (norma1(X1, X) < eps || norma2(X1, X) < eps || norma3(X1, X) < eps) break;
+
         X = X1;
         iter++;
-    } while (iter < MAX_ITER && norma1(X1, X) > eps && norma2(X1, X) > eps && norma3(X1, X) > eps);
+    }
     return X1;
 }
 
@@ -159,7 +161,8 @@ int main() {
     bool converge = verify_convergence(C);
 
     if (converge) {
-        auto sol = solve_CG(C, A.b, g);
+        std::vector<double> x0(n, 0.0);
+        auto sol = solve_CG(C, x0, g);
         print_solucao(sol);
     }
     else {
