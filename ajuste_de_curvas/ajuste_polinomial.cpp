@@ -182,7 +182,7 @@ std::vector<T> find_solucao(const sistema<T> &A) {
 }
 
 template<typename T>
-auto solve(const tabela<T> &table, int degree) {
+auto polyfit(const tabela<T> &table, int degree) {
     matriz<T> mat = build_pow_matrix(table, degree);
     std::vector<T> res = build_res_vector(table, degree);
     sistema<T> M(degree+1);
@@ -202,7 +202,7 @@ int main() {
         std::cin >> T.x[i] >> T.fx[i];
     }
 
-    auto v = solve(T, 1);
+    auto v = polyfit(T, 1);
 
     print_vetor(v);
 }
