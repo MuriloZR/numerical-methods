@@ -1,5 +1,5 @@
+#include "../sistemas_lineares/sistemas_lineares.hpp"
 #include <iostream>
-#include <print>
 #include <vector>
 #include <cmath>
 
@@ -9,7 +9,7 @@ struct tabela {
     std::vector<T> fx;
 
     tabela(size_t n)
-        : x(std::vector<T>(n, 0)), fx(std::vector<T>(n, 0))
+        : x(n, 0), fx(n, 0)
     {}
 
     tabela(const std::vector<T> &x, const std::vector<T> &y)
@@ -18,8 +18,26 @@ struct tabela {
 };
 
 template<typename T>
-std::vector<T> interpolate(tabela<T> table) {
+Matriz<T> build_coef_mat(const tabela<T> &table) {
+    size_t n = table.x.size();
+    Matriz<T> ret(n);
 
+    for (size_t i = 0; i < n; i++) {
+        for (size_t j = 0; j < n; j++) {
+            ret(i, j) = std::pow(table.x[i], j);
+        }
+    }
+
+    return ret;
+}
+
+template<typename T>
+auto polyfit(const tabela<T> &table) {
+    Matriz<T> mat = build_coef_mat(table);
+    Sistema<T> M(table.x.size());
+    M.a = mat;
+    M.b = table.fx;
+    return M.solve_gauss();
 }
 
 int main() {
@@ -28,7 +46,12 @@ int main() {
 
     tabela<double> T(n);
 
-    for (int i{}; i < n; i++) {
+    for (size_t i = 0; i < n; i++) {
         std::cin >> T.x[i] >> T.fx[i];
     }
+
+    auto v = polyfit(T);
+
+    print_vetor(v);
+    return 0;
 }
