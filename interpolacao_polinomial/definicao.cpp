@@ -40,6 +40,16 @@ auto polyfit(const tabela<T> &table) {
     return M.solve_gauss();
 }
 
+template<typename T>
+auto evaluate(std::vector<T> poly, T x) {
+    T res{};
+    for (int i = 0; i < poly.size(); i++) {
+        res += poly[i]*std::pow(x, i);
+    }
+
+    return res;
+}
+
 int main() {
     int n;
     std::cin >> n;
@@ -52,6 +62,7 @@ int main() {
 
     auto v = polyfit(T);
 
-    print_vetor(v);
-    return 0;
+    for (int i = 0; i < n; i++) {
+        std::print("P(x) = {} f(x) = {}\n", evaluate(v, T.x[i]), T.fx[i]);
+    }
 }

@@ -9,12 +9,16 @@ struct Matriz {
     std::uint32_t rows, cols;
     std::vector<T> data;
 
-    Matriz(std::size_t r, std::size_t c, T val = T{}):
-        rows(r), cols(c), data(r * c, val)
+    explicit Matriz(std::size_t n):
+        rows(n), cols(n), data(n * n, T{})
     {}
 
-    Matriz(std::size_t n, T val = T{}):
-        Matriz(n, n, val)
+    Matriz(std::size_t r, std::size_t c):
+        rows(r), cols(c), data(r * c, T{})
+    {}
+
+    Matriz(std::size_t r, std::size_t c, T val):
+        rows(r), cols(c), data(r * c, val)
     {}
 
     [[nodiscard]] inline T& operator()(std::size_t i, std::size_t j) noexcept {
