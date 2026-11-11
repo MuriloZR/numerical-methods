@@ -1,23 +1,10 @@
 #include <vector>
 #include <iostream>
 #include <print>
+#include "../codigos_auxiliares/custom_structs.hpp"
 
 template<typename T>
-struct tabela {
-    std::vector<T> x;
-    std::vector<T> fx;
-
-    tabela(size_t n)
-        : x(n, 0), fx(n, 0)
-    {}
-
-    tabela(const std::vector<T> &x, const std::vector<T> &y)
-        : x(x), fx(y)
-    {}
-};
-
-template<typename T>
-auto generate_div_diff_table(const tabela<T> &table, T x) {
+auto generate_div_diff_table(const tabela<T> &table) {
     std::vector<std::vector<T>> diferencas_divididas(table.fx.size());
     T res{};
     for (int i = 0; i < table.fx.size(); i++) {
@@ -56,7 +43,7 @@ int main() {
         std::cin >> T.x[i] >> T.fx[i];
     }
 
-    auto div_diffs = generate_div_diff_table(T, 1.0);
+    auto div_diffs = generate_div_diff_table(T);
 
     for (int i = 0; i < n; i++) {
         std::print("P(x) = {} f(x) = {}\n", evaluate(T, div_diffs, T.x[i]), T.fx[i]);
