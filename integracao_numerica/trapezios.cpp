@@ -16,10 +16,12 @@ auto integrate(const Fn &f, T a, T b, uint32_t n = 100'000) {
 template<typename T>
 requires std::floating_point<T>
 auto integrate(const tabela<T> &table) {
-    T h = static_cast<T>(1)/static_cast<T>(table.fx.size());
-    T sum = (table.fx[0] + *(table.fx.end()-1)) / static_cast<T>(2);
-    for (size_t i = 1; i < table.fx.size(); i++) sum += table.fx[i];
-    return sum * h;
+    T sum {};
+    for (size_t i = 1; i < table.fx.size(); i++) {
+        T dx = table.x[i] - table.x[i-1];
+        sum += static_cast<T>(0.5) * (table.fx[i] + table.fx[i-1]) * dx;
+    }
+    return sum;
 }
 
 int main() {
