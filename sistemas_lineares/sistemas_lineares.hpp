@@ -141,7 +141,7 @@ public:
         std::print("Matriz Ampliada do Sistema:\n");
         for (int i{}; i < n; i++) {
             for (int j{}; j < n; j++) {
-                std::print("{} ", a.at(i, j));
+                std::print("{} ", a(i, j));
             }
             std::print("| {}", b[i]);
             std::print("\n");
