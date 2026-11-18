@@ -24,7 +24,7 @@ template <typename Func>
 requires std::invocable<Func, double>
 auto bissecao(Func&& f, double a, double b,
                 double epsilon = std::numeric_limits<double>::epsilon(),
-                int32_t max_iter = 1000) -> Result
+                int32_t max_iter = 1000, bool verbose = false) -> Result
 {
     auto pm {[&a, &b](){
         return a+(b-a)/2.0;}
@@ -38,6 +38,10 @@ auto bissecao(Func&& f, double a, double b,
 
     if (fa * fb > 0.0) return { 0.0, 0.0, 0, Status::InvalidInterval, "Bissecao" };
 
+    if (verbose) {
+        std::print("\nMétodo da Bisseção\n");
+    }
+
     double x {pm()};
     double fx {f(x)};
 
@@ -49,6 +53,10 @@ auto bissecao(Func&& f, double a, double b,
         }
 
         if (std::isnan(fx) || std::isinf(fx)) return { x, fx, iter, Status::DivergedToNaN, "Bissessao" };
+
+        if (verbose) {
+            std::print("Iteração: {} | x: {:.9} | f(x): {:.9}\n", iter, x, fx);
+        }
 
         if (fa * fx <= 0.0) {
             b = x; fb = fx;
@@ -68,7 +76,7 @@ template <typename Func>
 requires std::invocable<Func, double>
 auto falsa_posicao(Func&& f, double a, double b,
                 double epsilon = std::numeric_limits<double>::epsilon(),
-                int32_t max_iter = 1000) -> Result
+                int32_t max_iter = 1000, bool verbose = false) -> Result
 {
     double
         fa {f(a)},
@@ -79,6 +87,10 @@ auto falsa_posicao(Func&& f, double a, double b,
         tol_rel = epsilon;
 
     auto zero_reta {[&a, &fa, &b, &fb](){return a - fa * (b-a)/(fb-fa);}};
+
+    if (verbose) {
+        std::print("\nMétodo da Falsa Posição\n");
+    }
 
     x = zero_reta();
     fx = f(x);
@@ -97,6 +109,10 @@ auto falsa_posicao(Func&& f, double a, double b,
 
         if (std::isnan(fx) || std::isinf(fx)) return { x, fx, iter, Status::DivergedToNaN, "Falsa Posicao" };
 
+        if (verbose) {
+            std::print("Iteração: {} | x: {:.9} | f(x): {:.9}\n", iter, x, fx);
+        }
+
         if (fa * fx <= 0.0) {
             b = x; fb = fx;
         }
@@ -114,12 +130,16 @@ template <typename Func>
 requires std::invocable<Func, std::complex<double>>
 auto newton_raphson(Func&& f, double x0,
                 double epsilon = std::numeric_limits<double>::epsilon(),
-                int32_t max_iter = 100) -> Result
+                int32_t max_iter = 100, bool verbose =  false) -> Result
 {
     constexpr double h = 1e-100;
     double
         tol_abs {epsilon},
         tol_rel {epsilon};
+
+    if (verbose) {
+        std::print("\nMétodo de Newton Raphson\n");
+    }
 
     for (int32_t iter {0}; iter < max_iter; ++iter) {
         std::complex<double> z = f(std::complex<double>(x0, h));
@@ -142,6 +162,10 @@ auto newton_raphson(Func&& f, double x0,
            return { x1, f(std::complex<double>(x1, 0.0)).real(), iter + 1, Status::Success, "Newton Raphson" };
         }
 
+        if (verbose) {
+            std::print("Iteração: {} | x[{}]: {:.9} | x[{}]: {:.9}\n", iter, iter, x0, iter+1, x1);
+        }
+
         x0 = x1;
         if (std::isnan(x0) || std::isinf(x0)) return { x0, fx, iter, Status::DivergedToNaN, "Newton Raphson" };
     }
@@ -153,13 +177,17 @@ template <typename Func>
 requires std::invocable<Func, double>
 auto secantes(Func&& f, double x0, double x1,
                 double epsilon = std::numeric_limits<double>::epsilon(),
-                int32_t max_iter = 1000) -> Result
+                int32_t max_iter = 1000, bool verbose = false) -> Result
 {
     double
         tol_abs {epsilon},
         tol_rel {epsilon},
         fx0 {f(x0)},
         fx1 {f(x1)};
+
+    if (verbose) {
+        std::print("\nMétodo das Secantes\n");
+    }
 
     for (int32_t iter = 0; iter < max_iter; iter++) {
         if (std::abs(fx1) <= tol_abs) return { x1, fx1, iter, Status::Success, "Secantes" };
@@ -173,6 +201,11 @@ auto secantes(Func&& f, double x0, double x1,
         double current_tol = tol_abs + tol_rel * std::abs(x1);
 
         if (std::abs(step) < current_tol) return { x2, f(x2), iter+1, Status::Success, "Secantes" };
+
+        if (verbose) {
+            std::print("Iteração: {} | x[{}]: {:.9} | fx[{}]: {:.9} | x[{}]: {:.9} | fx[{}]: {:.9} | x[{}]: {:.9} | fx[{}]: {:.9}\n",
+                                  iter, iter, x0, iter, fx0, iter+1, x1, iter+1, fx1, iter+2, x2, iter+2, f(x2));
+        }
 
         x0 = x1; fx0 = fx1;
         x1 = x2; fx1 = f(x2);
