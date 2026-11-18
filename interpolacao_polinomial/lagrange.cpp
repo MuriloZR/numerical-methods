@@ -20,7 +20,7 @@ auto evaluate(const tabela<T> &table, T x) {
 }
 
 int main() {
-    int n;
+    size_t n;
     std::cin >> n;
 
     tabela<double> T(n);
@@ -29,7 +29,7 @@ int main() {
         std::cin >> T.x[i] >> T.fx[i];
     }
 
-    for (int i = 0; i < n; i++) {
+    for (size_t i = 0; i < n; i++) {
         std::print("P(x) = {} f(x) = {}\n", evaluate(T, T.x[i]), T.fx[i]);
     }
 }

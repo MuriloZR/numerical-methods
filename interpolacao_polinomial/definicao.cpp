@@ -29,7 +29,7 @@ auto polyfit(const tabela<T> &table) {
 template<typename T>
 auto evaluate(std::vector<T> poly, T x) {
     T res{};
-    for (int i = 0; i < poly.size(); i++) {
+    for (size_t i = 0; i < poly.size(); i++) {
         res += poly[i]*std::pow(x, i);
     }
 
@@ -37,7 +37,7 @@ auto evaluate(std::vector<T> poly, T x) {
 }
 
 int main() {
-    int n;
+    size_t n;
     std::cin >> n;
 
     tabela<double> T(n);
@@ -48,7 +48,7 @@ int main() {
 
     auto v = polyfit(T);
 
-    for (int i = 0; i < n; i++) {
+    for (size_t i = 0; i < n; i++) {
         std::print("P(x) = {} f(x) = {}\n", evaluate(v, T.x[i]), T.fx[i]);
     }
 }
