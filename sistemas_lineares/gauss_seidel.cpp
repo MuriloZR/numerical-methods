@@ -10,7 +10,7 @@ struct sistema {
     std::vector<std::vector<T>> a;
     std::vector<T> b;
 
-    sistema(int n)
+    sistema(size_t n)
         : n(n), a(std::vector<std::vector<T>>(n, std::vector<T>(n))), b(std::vector<T>(n))
     {}
 
@@ -40,13 +40,23 @@ struct sistema {
 };
 
 template<typename T>
+void print_vetor(const std::vector<T> &x) {
+    std::print("Solução:\nx = (");
+    for (auto it = x.begin(); it != x.end(); it++) {
+        std::print("{}", *it);
+        if (it == x.end()-1) std::print(")\n");
+        else std::print(", ");
+    }
+}
+
+template<typename T>
 [[nodiscard]]
 auto build_CG(const sistema<T> &s) {
     std::vector<std::vector<T>> C(s.n, std::vector<T>(s.n));
     std::vector<T> g(s.n);
 
-    for (int i = 0; i < s.n; i++) {
-        for (int j = 0; j < s.n; j++) {
+    for (size_t i = 0; i < s.n; i++) {
+        for (size_t j = 0; j < s.n; j++) {
             C[i][j] = ( i == j ? 0 : -s.a[i][j]/s.a[i][i] );
         }
         g[i] = s.b[i]/s.a[i][i];
@@ -60,8 +70,8 @@ template<typename T>
 bool verify_convergence(const std::vector<std::vector<T>> &C) {
     std::vector<T> alpha(C.size(), 0), gamma(C.size(), 0);
 
-    for (int i {}; i < alpha.size(); i++) {
-        for (int j {}; j < alpha.size(); j++) {
+    for (size_t i {}; i < alpha.size(); i++) {
+        for (size_t j {}; j < alpha.size(); j++) {
             alpha[i] += std::abs(C[i][j]);
             gamma[j] += std::abs(C[i][j]);
         }
@@ -77,8 +87,8 @@ bool verify_convergence(const std::vector<std::vector<T>> &C) {
 template<typename T>
 void mult_CX_add_g(const std::vector<std::vector<T>> &C, std::vector<T> &X, const std::vector<T> &g) {
     std::vector<T> res(X.size(), 0);
-    for (int i {}; i < C.size(); i++) {
-        for (int j {}; j < X.size(); j++) {
+    for (size_t i {}; i < C.size(); i++) {
+        for (size_t j {}; j < X.size(); j++) {
             res[i] += C[i][j] * X[j];
         }
         X[i] = res[i] + g[i];
@@ -95,7 +105,7 @@ template<typename T>
 [[nodiscard]]
 auto norma1(const std::vector<T> &X1, const std::vector<T> &X0) {
     T res {};
-    for (int i {}; i < X1.size(); i++) res += std::abs(X1[i] - X0[i]);
+    for (size_t i {}; i < X1.size(); i++) res += std::abs(X1[i] - X0[i]);
     return res;
 }
 
@@ -103,7 +113,7 @@ template<typename T>
 [[nodiscard]]
 auto norma2(const std::vector<T> &X1, const std::vector<T> &X0) {
     T res {};
-    for (int i {}; i < X1.size(); i++) res += (X1[i] - X0[i])*(X1[i] - X0[i]);
+    for (size_t i {}; i < X1.size(); i++) res += (X1[i] - X0[i])*(X1[i] - X0[i]);
     return std::sqrt(res);
 }
 
@@ -111,17 +121,22 @@ template<typename T>
 [[nodiscard]]
 auto norma3(const std::vector<T> &X1, const std::vector<T> &X0) {
     T res {};
-    for (int i {}; i < X1.size(); i++) res = std::max(std::abs(X1[i] - X0[i]), res);
+    for (size_t i {}; i < X1.size(); i++) res = std::max(std::abs(X1[i] - X0[i]), res);
     return res;
 }
 
 template<typename T>
 [[nodiscard]]
-auto solve_CG(const std::vector<std::vector<T>> &C, std::vector<T> &X, const std::vector<T> &g, T eps = std::numeric_limits<T>::epsilon()) {
+auto solve_CG(const std::vector<std::vector<T>> &C, std::vector<T> &X, const std::vector<T> &g,
+              T eps = std::numeric_limits<T>::epsilon(), bool verbose = false) {
     int32_t iter{}, MAX_ITER{1'000'000};
     std::vector<T> X1 {X};
     while (iter < MAX_ITER) {
         mult_CX_add_g(C, X1, g);
+
+        if (verbose) {
+            print_vetor(X1);
+        }
 
         if (norma1(X1, X) < eps || norma2(X1, X) < eps || norma3(X1, X) < eps) break;
 
@@ -131,22 +146,12 @@ auto solve_CG(const std::vector<std::vector<T>> &C, std::vector<T> &X, const std
     return X1;
 }
 
-template<typename T>
-void print_solucao(const std::vector<T> &x) {
-    std::print("Solução:\nx = (");
-    for (auto it = x.begin(); it != x.end(); it++) {
-        std::print("{}", *it);
-        if (it == x.end()-1) std::print(")\n");
-        else std::print(", ");
-    }
-}
-
 int main() {
     std::size_t n;
     std::cin >> n;
     sistema<double> A(n);
-    for (int i = 0; i < A.n; i++) {
-        for (int j = 0; j < A.n; j++) {
+    for (size_t i = 0; i < A.n; i++) {
+        for (size_t j = 0; j < A.n; j++) {
             std::cin >> A.a[i][j];
         }
         std::cin >> A.b[i];
@@ -160,7 +165,7 @@ int main() {
     if (converge) {
         std::vector<double> x0(n, 0.0);
         auto sol = solve_CG(C, x0, g);
-        print_solucao(sol);
+        print_vetor(sol);
     }
     else {
         std::print("Um dos testes de convergência falhou\n");
