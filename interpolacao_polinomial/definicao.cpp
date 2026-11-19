@@ -27,7 +27,7 @@ auto polyfit(const tabela<T> &table) {
 }
 
 template<typename T>
-auto evaluate(std::vector<T> poly, T x) {
+auto evaluate(const std::vector<T> &poly, T x) {
     T res{};
     for (size_t i = 0; i < poly.size(); i++) {
         res += poly[i]*std::pow(x, i);

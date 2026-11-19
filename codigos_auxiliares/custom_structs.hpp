@@ -1,11 +1,10 @@
 #pragma once
-#include <cstdint>
 #include <vector>
 #include <print>
 
 template<typename T>
 struct Matriz {
-    std::uint32_t rows, cols;
+    std::size_t rows, cols;
     std::vector<T> data;
 
     explicit Matriz(std::size_t n):

@@ -4,6 +4,7 @@
 #include <print>
 #include <algorithm>
 #include <utility>
+#include <limits>
 #include "../codigos_auxiliares/custom_structs.hpp"
 
 template<typename T>
@@ -45,6 +46,7 @@ public:
     Sistema(std::size_t n) : n(n), a(n), b(n) {}
 
     [[nodiscard]] std::vector<T> solve_gauss() const {
+        if (n == 0) { return {}; }
         Matriz<T> A = a;
         std::vector<T> B = b;
 
@@ -57,6 +59,8 @@ public:
                     pivo = i;
                 }
             }
+
+            if (max_val <= std::numeric_limits<T>::epsilon()) { return {}; }
 
             if (pivo != j) {
                 for (std::size_t k = 0; k < n; ++k) std::swap(A(j, k), A(pivo, k));
@@ -75,28 +79,74 @@ public:
     }
 
     [[nodiscard]] std::vector<T> solve_fatoracao_LU() const {
+        if (n == 0) return {};
+
         Matriz<T> L(n, T{});
         Matriz<T> U(n, T{});
+        Matriz<T> A = a;
+        std::vector<T> B = b;
+        std::vector<T> col_vals(n);
+
+        constexpr T eps = std::numeric_limits<T>::epsilon();
 
         for (std::size_t i = 0; i < n; ++i) {
-            L(i, i) = 1;
-            for (std::size_t j = i; j < n; ++j) {
+            std::size_t pivot_row = i;
+            T max_val = T{0};
+
+            for (std::size_t row = i; row < n; ++row) {
                 T sum{};
-                for (std::size_t k = 0; k < i; ++k) sum += L(i, k) * U(k, j);
-                U(i, j) = a(i, j) - sum;
+                for (std::size_t k = 0; k < i; ++k) {
+                    sum += L(row, k) * U(k, i);
+                }
+                col_vals[row] = A(row, i) - sum;
+
+                T abs_val = std::abs(col_vals[row]);
+                if (abs_val > max_val) {
+                    max_val = abs_val;
+                    pivot_row = row;
+                }
             }
+
+            if (max_val <= eps) {
+                return {};
+            }
+
+            if (pivot_row != i) {
+                std::swap(col_vals[i], col_vals[pivot_row]);
+                std::swap(B[i], B[pivot_row]);
+
+                for (std::size_t col = i + 1; col < n; ++col) {
+                    std::swap(A(i, col), A(pivot_row, col));
+                }
+
+                for (std::size_t col = 0; col < i; ++col) {
+                    std::swap(L(i, col), L(pivot_row, col));
+                }
+            }
+
+            L(i, i) = T{1};
+            U(i, i) = col_vals[i];
+
             for (std::size_t j = i + 1; j < n; ++j) {
                 T sum{};
-                for (std::size_t k = 0; k < i; ++k) sum += L(j, k) * U(k, i);
-                L(j, i) = (a(j, i) - sum) / U(i, i);
+                for (std::size_t k = 0; k < i; ++k) {
+                    sum += L(i, k) * U(k, j);
+                }
+                U(i, j) = A(i, j) - sum;
+            }
+
+            for (std::size_t j = i + 1; j < n; ++j) {
+                L(j, i) = col_vals[j] / U(i, i);
             }
         }
 
-        auto y = substituicao_direta(L, b);
+        auto y = substituicao_direta(L, B);
         return retro_substituicao(U, y);
     }
 
     [[nodiscard]] std::vector<T> solve_gauss_jacobi(T tol = 1e-10, int max_iter = 1000) const {
+        if (n == 0) { return {}; }
+
         std::vector<T> x(n, T{0});
         std::vector<T> x_new(n, T{0});
 
@@ -108,6 +158,7 @@ public:
                     if (i != j) sum -= a(i, j) * x[j];
                 }
                 x_new[i] = sum / a(i, i);
+                if (std::isnan(x_new[i]) || std::isinf(x_new[i])) { return {}; }
                 max_diff = std::max(max_diff, std::abs(x_new[i] - x[i]));
             }
 
@@ -118,6 +169,8 @@ public:
     }
 
     [[nodiscard]] std::vector<T> solve_gauss_seidel(T tol = 1e-10, int max_iter = 1000) const {
+        if (n == 0) { return {}; }
+
         std::vector<T> x(n, T{0});
 
         for (int iter = 0; iter < max_iter; ++iter) {
@@ -128,6 +181,7 @@ public:
                     if (i != j) sum -= a(i, j) * x[j];
                 }
                 T novo_xi = sum / a(i, i);
+                if (std::isnan(novo_xi) || std::isinf(novo_xi)) { return {}; }
                 max_diff = std::max(max_diff, std::abs(novo_xi - x[i]));
                 x[i] = novo_xi;
             }
@@ -138,6 +192,7 @@ public:
     }
 
     void print_matriz_ampliada() const {
+        if (n == 0) { return; }
         std::print("Matriz Ampliada do Sistema:\n");
         for (int i{}; i < n; i++) {
             for (int j{}; j < n; j++) {
@@ -149,6 +204,7 @@ public:
     }
 
     void print_sistema() const {
+        if (n == 0) { return; }
         std::print("Sistema:\n");
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {

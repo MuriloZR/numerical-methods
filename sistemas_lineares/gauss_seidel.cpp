@@ -68,20 +68,20 @@ auto build_CG(const sistema<T> &s) {
 template<typename T>
 [[nodiscard]]
 bool verify_convergence(const std::vector<std::vector<T>> &C) {
-    std::vector<T> alpha(C.size(), 0), gamma(C.size(), 0);
-
-    for (size_t i {}; i < alpha.size(); i++) {
-        for (size_t j {}; j < alpha.size(); j++) {
-            alpha[i] += std::abs(C[i][j]);
-            gamma[j] += std::abs(C[i][j]);
+    if (C.empty()) { return false; }
+    std::vector<T> beta(C.size(), T{0});
+    for (std::size_t i = 0; i < C.size(); ++i) {
+        T bi{};
+        for (std::size_t j = 0; j < i; ++j) {
+            bi += std::abs(C[i][j]) * beta[j];
         }
+        for (std::size_t j = i + 1; j < C.size(); ++j) {
+            bi += std::abs(C[i][j]);
+        }
+        beta[i] = bi;
     }
 
-    auto c1 = *std::ranges::max_element(alpha);
-    auto c2 = *std::ranges::max_element(gamma);
-
-    if (c1 < 1 || c2 < 1) return true;
-    else return false;
+       return *std::max_element(beta.begin(), beta.end()) < static_cast<T>(1);
 }
 
 template<typename T>

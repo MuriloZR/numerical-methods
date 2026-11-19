@@ -3,7 +3,9 @@
 #include <print>
 
 template<typename T>
-auto evaluate(const tabela<T> &table, T x) {
+T evaluate(const tabela<T> &table, T x) {
+    if (table.fx.empty()) { return {}; }
+
     int n = table.fx.size();
 
     T res{};

@@ -6,6 +6,7 @@
 template<typename Fn, typename T>
 requires std::invocable<Fn, T> && std::floating_point<T>
 auto integrate(const Fn &f, T a, T b, uint32_t n = 10'000) {
+    if (n < 2) n = 2;
     if (n % 2 != 0) n++;
 
     T h {(b - a) / static_cast<T>(n)};
@@ -25,14 +26,13 @@ auto integrate(const Fn &f, T a, T b, uint32_t n = 10'000) {
     return total_sum * (h/static_cast<T>(3));
 }
 
-
 template<typename T>
 requires std::floating_point<T>
 auto integrate(const tabela<T> &table) {
     size_t n = table.fx.size();
     if (n < 3 || (n-1)%2 != 0) throw std::invalid_argument("you need at least 3 points");
 
-    T h = (table.x.back() - table.x.front()) / static_cast<T>(table.x.size() - 1);
+    T h = (table.x.back() - table.x.front()) / static_cast<T>(n - 1);
     T total_sum {(*table.fx.begin() + *(table.fx.end()-1))};
     T even_sum {};
     T odd_sum {};

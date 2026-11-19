@@ -52,7 +52,7 @@ auto bissecao(Func&& f, double a, double b,
             return { x, fx, iter, Status::Success, "Bissecao" };
         }
 
-        if (std::isnan(fx) || std::isinf(fx)) return { x, fx, iter, Status::DivergedToNaN, "Bissessao" };
+        if (std::isnan(fx) || std::isinf(fx)) return { x, fx, iter, Status::DivergedToNaN, "Bissecao" };
 
         if (verbose) {
             std::print("Iteração: {} | x: {:.9} | f(x): {:.9}\n", iter, x, fx);
@@ -92,10 +92,10 @@ auto falsa_posicao(Func&& f, double a, double b,
         std::print("\nMétodo da Falsa Posição\n");
     }
 
+    if (fa * fb > 0.0 || std::abs(fb - fa) < epsilon) return { 0.0, 0.0, 0, Status::InvalidInterval, "Falsa Posicao" };
+
     x = zero_reta();
     fx = f(x);
-
-    if (fa * fb > 0.0) return { 0.0, 0.0, 0, Status::InvalidInterval, "Falsa Posicao" };
 
     for (int32_t iter = 0; iter < max_iter; ++iter) {
         if (std::abs(fb-fa) < std::numeric_limits<double>::epsilon()) {
@@ -202,13 +202,14 @@ auto secantes(Func&& f, double x0, double x1,
 
         if (std::abs(step) < current_tol) return { x2, f(x2), iter+1, Status::Success, "Secantes" };
 
+        double fx2 = f(x2);
         if (verbose) {
             std::print("Iteração: {} | x[{}]: {:.9} | fx[{}]: {:.9} | x[{}]: {:.9} | fx[{}]: {:.9} | x[{}]: {:.9} | fx[{}]: {:.9}\n",
-                                  iter, iter, x0, iter, fx0, iter+1, x1, iter+1, fx1, iter+2, x2, iter+2, f(x2));
+                                  iter, iter, x0, iter, fx0, iter+1, x1, iter+1, fx1, iter+2, x2, iter+2, fx2);
         }
 
         x0 = x1; fx0 = fx1;
-        x1 = x2; fx1 = f(x2);
+        x1 = x2; fx1 = fx2;
 
         if (std::isnan(x1) || std::isinf(x1)) return { x1, fx1, iter, Status::DivergedToNaN, "Secantes" };
     }
@@ -242,6 +243,7 @@ int main() {
         std::cin >> MAX_ITER;
         while (MAX_ITER <= 0) {
             std::print(std::cerr, "Números menores ou iguais a 0, ou maiores que {} não são válidos. Insira um número de iterações válido: ", std::numeric_limits<int32_t>::max());
+            std::cin >> MAX_ITER;
         }
     }
 

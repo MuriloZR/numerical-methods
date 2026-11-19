@@ -19,7 +19,8 @@ auto generate_div_diff_table(const tabela<T> &table) {
 }
 
 template<typename T>
-auto evaluate(const tabela<T> &table, const std::vector<std::vector<T>> &div_diffs, T x) {
+T evaluate(const tabela<T> &table, const std::vector<std::vector<T>> &div_diffs, T x) {
+    if (table.fx.empty()) { return {}; }
     T res{div_diffs[0][0]};
     for (size_t i = 1; i < table.fx.size(); i++) {
         T tmp {1};

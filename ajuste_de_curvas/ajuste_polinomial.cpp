@@ -32,7 +32,8 @@ std::vector<T> build_res_vector(const tabela<T> &table, int degree) {
 }
 
 template<typename T>
-auto polyfit(const tabela<T> &table, int degree, bool verbose = false) {
+std::vector<T> polyfit(const tabela<T> &table, uint32_t degree, bool verbose = false) {
+    if (table.fx.size() <= degree) { return {}; }
     Matriz<T> mat = build_pow_matrix(table, degree);
     std::vector<T> res = build_res_vector(table, degree);
     Sistema<T> M(degree+1);
